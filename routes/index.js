@@ -4,6 +4,7 @@ var fs = require('fs');
 var xml2js = require('xml2js');
 var builder = new xml2js.Builder();
 var crypto = require('crypto');
+var datetime = require('node-datetime');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -84,9 +85,15 @@ router.get('/buy', function (req, res, next) {
         objRet.returnmessage = '时间戳值为空';
         break procbody;
       }
+
+      if(userid.length !== 11 || userid === undefined){
+        objRet.returncode = '9004';
+        objRet.returnmessage = '商品ID为空';
+        break procbody;
+      }
       
       /* STEP 02: Create Password */
-      var keyString = '\x3D\x49\x7A\x5C\xBE\x28\xA1\x98';
+      var keyString = 'TestKeyValue';
       var serialcode = 'EVA-2018-09-18';
 
       var key = Buffer.from(keyString, 'ascii');
@@ -97,7 +104,13 @@ router.get('/buy', function (req, res, next) {
 
       objRet.salessysid = salessysid;
       objRet.salessysorderno = salessysorderno;
-      
+
+      /* STEP 03: Create OrderNumber */
+      var dt = datetime.create();
+      objRet.ordernumber = 'EV' + dt.format('ymdHMSN') + userid.substring(7, 11);
+      /* STEP 04: Create TimeStamp */
+      objRet.tradetime = dt.format('YmdHMS');
+      objRet.timestamp = dt.format('YmdHMSN');
     }
     var resXml = builder.buildObject({ 'response': objRet });
     res.send(resXml);
